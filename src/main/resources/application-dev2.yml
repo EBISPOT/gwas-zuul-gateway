@@ -1,0 +1,11 @@
+
+zuul:
+  routes:
+    gwas-rest:
+      path: /gwas/rest/**
+      url: http://localhost:9882/gwas/rest
+
+    gwas-ui:
+      path: /gwas/**
+      url: http://localhost:9881/gwas
+
