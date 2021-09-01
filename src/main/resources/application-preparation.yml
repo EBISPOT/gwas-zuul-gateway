@@ -1,0 +1,13 @@
+server:
+  port: 8180
+
+zuul:
+  routes:
+    gwas-rest:
+      path: /gwas/rest/**
+      url: http://snoopy.ebi.ac.uk:8182/gwas/rest
+
+    gwas-ui:
+      path: /gwas/**
+      url: http://snoopy.ebi.ac.uk:8181/gwas
+

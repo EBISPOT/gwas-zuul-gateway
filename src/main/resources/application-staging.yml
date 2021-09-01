@@ -1,0 +1,13 @@
+server:
+  port: 8180
+
+zuul:
+  routes:
+    gwas-rest:
+      path: /gwas/rest/**
+      url: http://${server.hostname}:8182/gwas/rest
+
+    gwas-ui:
+      path: /gwas/**
+      url: http://${server.hostname}:8181/gwas
+

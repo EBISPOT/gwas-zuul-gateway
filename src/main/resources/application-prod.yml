@@ -1,0 +1,13 @@
+server:
+  port: 9780
+
+zuul:
+  routes:
+    gwas-rest:
+      path: /gwas/rest/**
+      url: http://${server.hostname}:9782/gwas/rest
+
+    gwas-ui:
+      path: /gwas/**
+      url: http://${server.hostname}:9781/gwas
+

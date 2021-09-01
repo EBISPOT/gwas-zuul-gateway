@@ -3,9 +3,9 @@ zuul:
   routes:
     gwas-rest:
       path: /gwas/rest/**
-      url: http://localhost:9582/gwas/rest
+      url: http://snoopy.ebi.ac.uk:9782/gwas/rest
 
     gwas-ui:
       path: /gwas/**
-      url: http://localhost:9581/gwas
+      url: http://snoopy.ebi.ac.uk:9781/gwas
 

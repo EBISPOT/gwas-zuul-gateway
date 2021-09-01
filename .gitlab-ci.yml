@@ -7,6 +7,10 @@ stages:
   - deploy-snoopy-test
   - deploy-snoopy-preparation
   - deploy-wwwdev-staging
+  - deploy-ves-pg-7e-prod
+  - deploy-ves-pg-7f-prod
+  - deploy-ves-oy-7e-fallback
+  - deploy-ves-oy-7f-fallback
 
 maven-build:
   image: maven:3-jdk-8
@@ -31,7 +35,7 @@ deploy-dev1:
   script:
     - scp -o StrictHostKeyChecking=no gwas-zuul.jar $SERVER_SNOOPY:$APP_DIR_DEV1
     - ssh -o StrictHostKeyChecking=no $SERVER_SNOOPY
-      "kill -9 \$(ps aux | grep 'gwas-zuul.jar' | grep -v 'grep' | awk '{print \$2}');"
+      "kill -9 \$(ps aux | grep 'gwas-zuul.jar' | grep 'dev1' | grep -v 'grep' | awk '{print \$2}');"
     - ssh -o StrictHostKeyChecking=no $SERVER_SNOOPY
       "cd $APP_DIR_DEV1; nohup java -jar gwas-zuul.jar --spring.profiles.active=dev1 > /dev/null 2>&1 &"
   only:
@@ -50,11 +54,11 @@ deploy-dev2:
   script:
     - scp -o StrictHostKeyChecking=no gwas-zuul.jar $SERVER_SNOOPY:$APP_DIR_DEV2
       - ssh -o StrictHostKeyChecking=no $SERVER_SNOOPY
-      "kill -9 \$(ps aux | grep 'gwas-zuul.jar' | grep -v 'grep' | awk '{print \$2}');"
+      "kill -9 \$(ps aux | grep 'gwas-zuul.jar' | grep 'dev2' | grep -v 'grep' | awk '{print \$2}');"
     - ssh -o StrictHostKeyChecking=no $SERVER_SNOOPY
       "cd $APP_DIR_DEV2; nohup java -jar gwas-zuul.jar --spring.profiles.active=dev2 > /dev/null 2>&1 &"
   only:
-    - dev
+    - GOCI-371-UI-Refactoring-Zuul
 
 
 deploy-snoopy-test:
@@ -67,13 +71,13 @@ deploy-snoopy-test:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
   script:
-    - scp -o StrictHostKeyChecking=no gwas-zuul.jar $SNOOPY_SERVER:$APP_DIRECTORY_TEST
-    - ssh -o StrictHostKeyChecking=no $SNOOPY_SERVER
-      "kill -9 \$(ps aux | grep 'gwas-zuul.jar' | grep -v 'grep' | awk '{print \$2}');"
-    - ssh -o StrictHostKeyChecking=no $SNOOPY_SERVER
+    - scp -o StrictHostKeyChecking=no gwas-zuul.jar $SERVER_SNOOPY:$APP_DIRECTORY_TEST
+    - ssh -o StrictHostKeyChecking=no $SERVER_SNOOPY
+      "kill -9 \$(ps aux | grep 'gwas-zuul.jar' | grep 'test' | grep -v 'grep' | awk '{print \$2}');"
+    - ssh -o StrictHostKeyChecking=no $SERVER_SNOOPY
       "cd $APP_DIRECTORY_TEST; nohup java -jar gwas-zuul.jar $PROGRAM_ARGUMENTS --spring.profiles.active=test > /dev/null 2>&1 &"
   only:
-    - master
+    - GOCI-371-UI-Refactoring-Zuul
 
 
 
@@ -87,13 +91,13 @@ deploy-snoopy-preparation:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
   script:
-    - scp -o StrictHostKeyChecking=no gwas-zuul.jar $SNOOPY_SERVER:$APP_DIRECTORY_PREPARATION
-    - ssh -o StrictHostKeyChecking=no $SNOOPY_SERVER
-      "kill -9 \$(ps aux | grep 'gwas-zuul.jar' | grep -v 'grep' | awk '{print \$2}');"
-    - ssh -o StrictHostKeyChecking=no $SNOOPY_SERVER
+    - scp -o StrictHostKeyChecking=no gwas-zuul.jar $SERVER_SNOOPY:$APP_DIRECTORY_PREPARATION
+    - ssh -o StrictHostKeyChecking=no $SERVER_SNOOPY
+      "kill -9 \$(ps aux | grep 'gwas-zuul.jar' | grep 'preparation' | grep -v 'grep' | awk '{print \$2}');"
+    - ssh -o StrictHostKeyChecking=no $SERVER_SNOOPY
       "cd $APP_DIRECTORY_PREPARATION; nohup java -jar gwas-zuul.jar $PROGRAM_ARGUMENTS --spring.profiles.active=preparation > /dev/null 2>&1 &"
   only:
-    - master
+    - GOCI-371-UI-Refactoring-Zuul
 
 
 deploy-wwwdev-staging:
@@ -106,11 +110,100 @@ deploy-wwwdev-staging:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
   script:
-    - scp -o StrictHostKeyChecking=no gwas-zuul.jar $WWWDEV_STAGING_SERVER:$APP_DIR_NOAH
+    - scp -o StrictHostKeyChecking=no gwas-zuul.jar $SERVER_EBI_CLI:$APP_DIR_PROD
+    - ssh -o StrictHostKeyChecking=no $SERVER_EBI_CLI
+      "sudo -u spo_adm cp $APP_DIR_PROD/gwas-zuul.jar $APP_DIR_NOAH/gwas-zuul.jar"
     #- ssh -o StrictHostKeyChecking=no $WWWDEV_STAGING_SERVER
     #  "kill -9 \$(ps aux | grep 'gwas-zuul.jar' | grep -v 'grep' | awk '{print \$2}');"
     - ssh -o StrictHostKeyChecking=no $WWWDEV_STAGING_SERVER
-      "cd $APP_DIR_NOAH; nohup java -jar gwas-zuul.jar $PROGRAM_ARGUMENTS --spring.profiles.active=staging > /dev/null 2>&1 &"
+      "cd $EXEC_DIR_STAGING; nohup java -jar $APP_DIR_NOAH/gwas-zuul.jar --server.hostname=${SERVER_VES_HX_7F} --spring.profiles.active=staging > /dev/null 2>&1 &"
   #when: manual
   only:
-    - march-2021-refactoring
+    - GOCI-371-UI-Refactoring-Zuul
+
+deploy-ves-pg-7e-prod:
+  stage: deploy-ves-pg-7e-prod
+  image: alpine
+  before_script:
+    - apk add openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+  script:
+    - scp -o StrictHostKeyChecking=no gwas_zuul.jar $SERVER_EBI_CLI:$APP_DIR_PROD
+    - ssh -o StrictHostKeyChecking=no $SERVER_EBI_CLI
+      "sudo -u spo_adm cp $APP_DIR_PROD/gwas_zuul.jar $APP_DIR_NOAH/gwas_zuul.jar;
+      sudo -u spo_adm sync-project -w gwas;
+      sudo -u spo_adm ssh ves-pg-7e /nfs/public/ro/gwas/sw/update_data_link.sh"
+      #- ssh -o StrictHostKeyChecking=no $SERVER_VESPG7E_PROD
+    # "kill -9 \$(ps aux | grep 'gwas_zuul.jar' | grep 'prod' | grep -v 'grep' | awk '{print \$2}');"
+    - ssh -o StrictHostKeyChecking=no $SERVER_VESPG7E_PROD
+      "cd $EXEC_DIR_VESPG7E; nohup java -jar $APP_DIR_NOAH/gwas_zuul.jar --server.hostname=${SERVER_VES_PG_7E} --spring.profiles.active=prod > /dev/null 2>&1 &"
+  when: manual
+  only:
+    - GOCI-371-UI-Refactoring-Zuul
+
+
+deploy-ves-pg-7f-prod:
+  stage: deploy-ves-pg-7f-prod
+  image: alpine
+  before_script:
+    - apk add openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+  script:
+    - scp -o StrictHostKeyChecking=no gwas_zuul.jar $SERVER_EBI_CLI:$APP_DIR_PROD
+    - ssh -o StrictHostKeyChecking=no $SERVER_EBI_CLI
+      "sudo -u spo_adm cp $APP_DIR_PROD/gwas_zuul.jar $APP_DIR_NOAH/gwas_zuul.jar"
+    #- ssh -o StrictHostKeyChecking=no $SERVER_VESPG7F_PROD
+    # "kill -9 \$(ps aux | grep 'gwas_zuul.jar' | grep 'prod' | grep -v 'grep' | awk '{print \$2}');"
+    - ssh -o StrictHostKeyChecking=no $SERVER_VESPG7F_PROD
+      "cd $EXEC_DIR_VESPG7F; nohup java -jar $APP_DIR_NOAH/gwas_zuul.jar --server.hostname=${SERVER_VES_PG_7F}  --spring.profiles.active=prod > /dev/null 2>&1 &"
+  when: manual
+  only:
+    - GOCI-371-UI-Refactoring-Zuul
+
+deploy-ves-oy-7e-fallback:
+  stage: deploy-ves-oy-7e-fallback
+  image: alpine
+  before_script:
+    - apk add openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+  script:
+    - scp -o StrictHostKeyChecking=no gwas_zuul.jar $SERVER_EBI_CLI:$APP_DIR_PROD
+    - ssh -o StrictHostKeyChecking=no $SERVER_EBI_CLI
+      "sudo -u spo_adm cp $APP_DIR_PROD/gwas_zuul.jar $APP_DIR_NOAH/gwas_zuul.jar"
+    #- ssh -o StrictHostKeyChecking=no $SERVER_VESOY7E_FALLBACK
+    # "kill -9 \$(ps aux | grep 'gwas_zuul.jar' | grep 'prod' | grep -v 'grep' | awk '{print \$2}');"
+    - ssh -o StrictHostKeyChecking=no $SERVER_VESOY7E_FALLBACK
+      "cd $EXEC_DIR_VESOY7E; nohup java -jar $APP_DIR_NOAH/gwas_zuul.jar --server.hostname=${SERVER_VES_OY_7E}  --spring.profiles.active=fallback > /dev/null 2>&1 &"
+  when: manual
+  only:
+    - GOCI-371-UI-Refactoring-Zuul
+
+deploy-ves-oy-7f-fallback:
+  stage: deploy-ves-oy-7f-fallback
+  image: alpine
+  before_script:
+    - apk add openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+  script:
+    - scp -o StrictHostKeyChecking=no gwas_zuul.jar $SERVER_EBI_CLI:$APP_DIR_PROD
+    - ssh -o StrictHostKeyChecking=no $SERVER_EBI_CLI
+      "sudo -u spo_adm cp $APP_DIR_PROD/gwas_zuul.jar $APP_DIR_NOAH/gwas_zuul.jar"
+    #- ssh -o StrictHostKeyChecking=no $SERVER_VESOY7F_FALLBACK
+    # "kill -9 \$(ps aux | grep 'gwas_zuul.jar' | grep 'prod' | grep -v 'grep' | awk '{print \$2}');"
+    - ssh -o StrictHostKeyChecking=no $SERVER_VESOY7F_FALLBACK
+      "cd $EXEC_DIR_VESOY7F; nohup java -jar $APP_DIR_NOAH/gwas_zuul.jar  --server.hostname=${SERVER_VES_OY_7F}  --spring.profiles.active=fallback > /dev/null 2>&1 &"
+  when: manual
+  only:
+    - GOCI-371-UI-Refactoring-Zuul
