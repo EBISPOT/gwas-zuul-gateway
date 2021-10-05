@@ -53,8 +53,8 @@ deploy-dev2:
     - chmod 700 ~/.ssh
   script:
     - scp -o StrictHostKeyChecking=no gwas-zuul.jar $SERVER_SNOOPY:$APP_DIR_DEV2
-      - ssh -o StrictHostKeyChecking=no $SERVER_SNOOPY
-      "kill -9 \$(ps aux | grep 'gwas-zuul.jar' | grep 'dev2' | grep -v 'grep' | awk '{print \$2}');"
+    #- ssh -o StrictHostKeyChecking=no $SERVER_SNOOPY
+     # "kill -9 \$(ps aux | grep 'gwas-zuul.jar' | grep 'dev2' | grep -v 'grep' | awk '{print \$2}');"
     - ssh -o StrictHostKeyChecking=no $SERVER_SNOOPY
       "cd $APP_DIR_DEV2; nohup java -jar gwas-zuul.jar --spring.profiles.active=dev2 > /dev/null 2>&1 &"
   only:
@@ -72,10 +72,10 @@ deploy-snoopy-test:
     - chmod 700 ~/.ssh
   script:
     - scp -o StrictHostKeyChecking=no gwas-zuul.jar $SERVER_SNOOPY:$APP_DIRECTORY_TEST
+    #- ssh -o StrictHostKeyChecking=no $SERVER_SNOOPY
+     # "kill -9 \$(ps aux | grep 'gwas-zuul.jar' | grep 'test' | grep -v 'grep' | awk '{print \$2}');"
     - ssh -o StrictHostKeyChecking=no $SERVER_SNOOPY
-      "kill -9 \$(ps aux | grep 'gwas-zuul.jar' | grep 'test' | grep -v 'grep' | awk '{print \$2}');"
-    - ssh -o StrictHostKeyChecking=no $SERVER_SNOOPY
-      "cd $APP_DIRECTORY_TEST; nohup java -jar gwas-zuul.jar $PROGRAM_ARGUMENTS --spring.profiles.active=test > /dev/null 2>&1 &"
+      "cd $APP_DIRECTORY_TEST; nohup java -jar gwas-zuul.jar  --spring.profiles.active=test > /dev/null 2>&1 &"
   only:
     - GOCI-371-UI-Refactoring-Zuul
 
@@ -92,10 +92,10 @@ deploy-snoopy-preparation:
     - chmod 700 ~/.ssh
   script:
     - scp -o StrictHostKeyChecking=no gwas-zuul.jar $SERVER_SNOOPY:$APP_DIRECTORY_PREPARATION
+    #- ssh -o StrictHostKeyChecking=no $SERVER_SNOOPY
+     # "kill -9 \$(ps aux | grep 'gwas-zuul.jar' | grep 'preparation' | grep -v 'grep' | awk '{print \$2}');"
     - ssh -o StrictHostKeyChecking=no $SERVER_SNOOPY
-      "kill -9 \$(ps aux | grep 'gwas-zuul.jar' | grep 'preparation' | grep -v 'grep' | awk '{print \$2}');"
-    - ssh -o StrictHostKeyChecking=no $SERVER_SNOOPY
-      "cd $APP_DIRECTORY_PREPARATION; nohup java -jar gwas-zuul.jar $PROGRAM_ARGUMENTS --spring.profiles.active=preparation > /dev/null 2>&1 &"
+      "cd $APP_DIRECTORY_PREPARATION; nohup java -jar gwas-zuul.jar  --spring.profiles.active=preparation > /dev/null 2>&1 &"
   only:
     - GOCI-371-UI-Refactoring-Zuul
 
