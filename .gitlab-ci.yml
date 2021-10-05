@@ -115,7 +115,7 @@ deploy-wwwdev-staging:
       "sudo -u spo_adm cp $APP_DIR_PROD/gwas-zuul.jar $APP_DIR_NOAH/gwas-zuul.jar"
     #- ssh -o StrictHostKeyChecking=no $WWWDEV_STAGING_SERVER
     #  "kill -9 \$(ps aux | grep 'gwas-zuul.jar' | grep -v 'grep' | awk '{print \$2}');"
-    - ssh -o StrictHostKeyChecking=no $WWWDEV_STAGING_SERVER
+    - ssh -o StrictHostKeyChecking=no $SERVER_WWWDEV_STAGING
       "cd $EXEC_DIR_STAGING; nohup java -jar $APP_DIR_NOAH/gwas-zuul.jar --server.hostname=${SERVER_VES_HX_7F} --spring.profiles.active=staging > /dev/null 2>&1 &"
   #when: manual
   only:
